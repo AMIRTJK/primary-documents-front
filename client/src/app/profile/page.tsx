@@ -1,4 +1,4 @@
-import { ProfilePage } from "@/pages/profile/ProfilePage";
+import ProfilePage from "@/pages/profile/ProfilePage";
 
 export const metadata = {
   title: "Profile | INTERLINK",
