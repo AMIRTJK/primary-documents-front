@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 
-import { LikeOutlined, DislikeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { LikeOutlined, DislikeOutlined, CheckCircleOutlined, SoundOutlined } from '@ant-design/icons';
 import { message } from 'antd';
 
 interface IMessage {
@@ -46,6 +46,18 @@ export const SupportChat = () => {
         } catch (error) {
             console.error('Feedback error:', error);
         }
+    };
+
+    const handleSpeak = (text: string) => {
+        // Останавливаем предыдущую озвучку, если она была
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ru-RU'; // Устанавливаем русский язык
+        utterance.rate = 1.0;     // Скорость
+        utterance.pitch = 1.0;    // Тональность
+        
+        window.speechSynthesis.speak(utterance);
     };
 
     // 6. Загрузка истории из LocalStorage
@@ -239,6 +251,14 @@ export const SupportChat = () => {
                                                     <Button
                                                         type="text"
                                                         size="small"
+                                                        icon={<SoundOutlined className="text-gray-300! hover:text-blue-500!" />}
+                                                        onClick={() => handleSpeak(msg.content)}
+                                                        className="text-[10px]! p-0! h-6! w-6!"
+                                                        title="Озвучить"
+                                                    />
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
                                                         icon={msg.feedback === 'up' ? <CheckCircleOutlined className="text-green-500!" /> : <LikeOutlined className="text-gray-300! hover:text-blue-500!" />}
                                                         onClick={() => handleFeedback(msg.id, 'up')}
                                                         className="text-[10px]! p-0! h-6! w-6!"
@@ -256,15 +276,27 @@ export const SupportChat = () => {
                                     </div>
                                 ))}
 
-                                {/* 3. Индикатор набора текста */}
+                                {/* 3. Skeleton анимация при загрузке */}
                                 {isLoading && (
                                     <div className="flex! gap-2!">
                                         <Avatar size="small" icon={<RobotOutlined />} className="bg-blue-500!" />
-                                        <div className="bg-white! border! border-gray-100! p-2! px-4! rounded-2xl! rounded-tl-none! shadow-sm!">
-                                            <div className="flex! gap-1! py-1!">
-                                                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5! h-1.5! bg-blue-400! rounded-full!" />
-                                                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5! h-1.5! bg-blue-400! rounded-full!" />
-                                                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5! h-1.5! bg-blue-400! rounded-full!" />
+                                        <div className="bg-white! border! border-gray-100! p-3! rounded-2xl! rounded-tl-none! shadow-sm! w-[70%]!">
+                                            <div className="flex! flex-col! gap-2!">
+                                                <motion.div 
+                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                    transition={{ repeat: Infinity, duration: 1.5 }} 
+                                                    className="h-3! bg-gray-100! rounded! w-full!" 
+                                                />
+                                                <motion.div 
+                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                    transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} 
+                                                    className="h-3! bg-gray-100! rounded! w-[80%]!" 
+                                                />
+                                                <motion.div 
+                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                    transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} 
+                                                    className="h-3! bg-gray-100! rounded! w-[60%]!" 
+                                                />
                                             </div>
                                         </div>
                                     </div>
