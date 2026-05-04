@@ -47,7 +47,12 @@ export const SupportChat = () => {
             const response = await fetch('http://localhost:5000/api/ai/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: userMsg.content }),
+                body: JSON.stringify({ 
+                    messages: messages.map(m => ({
+                        role: m.role === 'ai' ? 'assistant' : 'user',
+                        content: m.content
+                    })).concat({ role: 'user', content: inputValue })
+                }),
             });
 
             if (!response.body) throw new Error('No response body');
