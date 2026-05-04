@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SupportChat } from "@/widgets/support-chat";
 
 export const metadata: Metadata = {
   title: "INTERLINK",
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`antialiased`} suppressHydrationWarning>
         {children}
+        <SupportChat />
       </body>
     </html>
   );

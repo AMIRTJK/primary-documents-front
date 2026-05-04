@@ -4,6 +4,7 @@ import cors from "cors";
 import { initDb, closeDb } from "./db/index.js";
 import { startCronJobs } from "./lib/cron.js";
 import compression from "compression";
+import aiRoutes from "./routes/ai.routes.js";
 
 const app = express();
 app.use(compression());
@@ -20,7 +21,7 @@ app.use(cors());
 app.use(express.json());
 
 // app.use("/api/v1/auth", authRoutes);
-
+app.use("/api/ai", aiRoutes);
 initDb()
   .then(() => {
     const server = app.listen(PORT, () => {
