@@ -62,7 +62,7 @@ export const SupportChat = () => {
                 if (value) {
                     const chunk = decoder.decode(value, { stream: true });
                     const lines = chunk.split('\n\n');
-                    
+
                     for (const line of lines) {
                         if (line.startsWith('data: ')) {
                             const dataStr = line.replace('data: ', '');
@@ -73,8 +73,8 @@ export const SupportChat = () => {
                             try {
                                 const parsed = JSON.parse(dataStr);
                                 if (parsed.content) {
-                                    setMessages((prev) => prev.map(msg => 
-                                        msg.id === aiMsgId 
+                                    setMessages((prev) => prev.map(msg =>
+                                        msg.id === aiMsgId
                                             ? { ...msg, content: msg.content + parsed.content }
                                             : msg
                                     ));
@@ -88,8 +88,8 @@ export const SupportChat = () => {
             }
         } catch (error) {
             console.error('Error fetching AI response:', error);
-            setMessages((prev) => prev.map(msg => 
-                msg.id === aiMsgId 
+            setMessages((prev) => prev.map(msg =>
+                msg.id === aiMsgId
                     ? { ...msg, content: 'Ошибка при получении ответа.' }
                     : msg
             ));
@@ -101,8 +101,8 @@ export const SupportChat = () => {
     return (
         <div className="fixed! bottom-6! right-6! z-50! flex! flex-col! items-end!">
             {isOpen && (
-                <Card 
-                    title="AI Поддержка" 
+                <Card
+                    title="AI Помощник"
                     extra={<Button type="text" icon={<CloseOutlined />} onClick={() => setIsOpen(false)} />}
                     className="w-80! shadow-xl! mb-4!"
                     bodyStyle={{ padding: 0 }}
@@ -112,13 +112,12 @@ export const SupportChat = () => {
                             <Text type="secondary" className="text-center! mt-4!">Чем могу помочь?</Text>
                         )}
                         {messages.map((msg) => (
-                            <div 
-                                key={msg.id} 
-                                className={`max-w-[85%]! p-3! rounded-lg! ${
-                                    msg.role === 'user' 
-                                        ? 'bg-blue-500! text-white! self-end! rounded-br-none!' 
-                                        : 'bg-white! border! border-gray-200! self-start! rounded-bl-none!'
-                                }`}
+                            <div
+                                key={msg.id}
+                                className={`max-w-[85%]! p-3! rounded-lg! ${msg.role === 'user'
+                                    ? 'bg-blue-500! text-white! self-end! rounded-br-none!'
+                                    : 'bg-white! border! border-gray-200! self-start! rounded-bl-none!'
+                                    }`}
                             >
                                 <Text className={msg.role === 'user' ? 'text-white!' : ''}>
                                     {msg.content}
@@ -128,28 +127,28 @@ export const SupportChat = () => {
                         <div ref={messagesEndRef} />
                     </div>
                     <div className="p-3! border-t! flex! gap-2!">
-                        <Input 
-                            value={inputValue} 
-                            onChange={(e) => setInputValue(e.target.value)} 
+                        <Input
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
                             onPressEnter={handleSend}
                             placeholder="Введите сообщение..."
                             disabled={isLoading}
                         />
-                        <Button 
-                            type="primary" 
-                            icon={<SendOutlined />} 
-                            onClick={handleSend} 
+                        <Button
+                            type="primary"
+                            icon={<SendOutlined />}
+                            onClick={handleSend}
                             loading={isLoading}
                         />
                     </div>
                 </Card>
             )}
             {!isOpen && (
-                <Button 
-                    type="primary" 
-                    shape="circle" 
-                    size="large" 
-                    icon={<MessageOutlined />} 
+                <Button
+                    type="primary"
+                    shape="circle"
+                    size="large"
+                    icon={<MessageOutlined />}
                     className="w-14! h-14! shadow-lg!"
                     onClick={() => setIsOpen(true)}
                 />
