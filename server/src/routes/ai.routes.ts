@@ -4,7 +4,7 @@ import { aiService, type IMessage } from '../services/ai.service.js';
 const router = express.Router();
 
 router.post('/generate', async (req, res) => {
-    const { prompt, messages } = req.body;
+    const { prompt, messages, currentPath } = req.body;
 
     // Поддержка как одиночного промпта, так и массива сообщений (для истории)
     let chatMessages: IMessage[] = [];
@@ -23,7 +23,7 @@ router.post('/generate', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     try {
-        const stream = await aiService.chatStream(chatMessages);
+        const stream = await aiService.chatStream(chatMessages, currentPath);
 
         for await (const part of stream) {
             res.write(`data: ${JSON.stringify({ content: part.message.content })}\n\n`);

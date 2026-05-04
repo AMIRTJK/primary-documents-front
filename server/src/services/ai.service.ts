@@ -17,10 +17,15 @@ class AiService {
      * Генерация потокового ответа
      * @param messages История сообщений
      */
-    async chatStream(messages: IMessage[]) {
-        // Добавляем системный промпт в начало, если его там нет
+    async chatStream(messages: IMessage[], currentPath?: string) {
+        let systemContent = AI_CONFIG.PERSONA.systemPrompt;
+        
+        if (currentPath) {
+            systemContent += `\n\nКОНТЕКСТ СТРАНИЦЫ: Пользователь сейчас находится на странице: ${currentPath}. Если это уместно, предложи помощь именно по этой странице.`;
+        }
+
         const fullMessages: IMessage[] = [
-            { role: 'system', content: AI_CONFIG.PERSONA.systemPrompt },
+            { role: 'system', content: systemContent },
             ...messages
         ];
 
