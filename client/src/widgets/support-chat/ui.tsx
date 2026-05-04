@@ -4,6 +4,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, Input, Card, Typography } from 'antd';
 import { MessageOutlined, CloseOutlined, SendOutlined } from '@ant-design/icons';
 
+import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
+
 const { Text } = Typography;
 
 interface IMessage {
@@ -110,7 +113,7 @@ export const SupportChat = () => {
                     title="AI Помощник"
                     extra={<Button type="text" icon={<CloseOutlined />} onClick={() => setIsOpen(false)} />}
                     className="w-80! shadow-xl! mb-4!"
-                    bodyStyle={{ padding: 0 }}
+                    styles={{ body: { padding: 0 } }}
                 >
                     <div className="h-96! overflow-y-auto! p-4! flex! flex-col! gap-3! bg-gray-50!">
                         {messages.length === 0 && (
@@ -124,11 +127,32 @@ export const SupportChat = () => {
                                     : 'bg-white! border! border-gray-200! self-start! rounded-bl-none!'
                                     }`}
                             >
-                                <Text className={msg.role === 'user' ? 'text-white!' : ''}>
-                                    {msg.content}
-                                </Text>
+                                <div className={msg.role === 'user' ? 'text-white!' : 'text-gray-800!'}>
+                                    <ReactMarkdown
+                                        components={{
+                                            a: ({ node, ...props }) => {
+                                                const isInternal = props.href?.startsWith('/');
+                                                if (isInternal) {
+                                                    return (
+                                                        <Link 
+                                                            href={props.href!} 
+                                                            className="bg-blue-50! text-blue-600! px-2! py-1! rounded! border! border-blue-200! hover:bg-blue-100! transition-colors! inline-block! my-1! text-sm! font-medium!"
+                                                        >
+                                                            {props.children}
+                                                        </Link>
+                                                    );
+                                                }
+                                                return <a {...props} target="_blank" rel="noopener noreferrer" className="text-blue-500! underline!" />;
+                                            },
+                                            p: ({ children }) => <p className="m-0!">{children}</p>
+                                        }}
+                                    >
+                                        {msg.content}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                         ))}
+
                         <div ref={messagesEndRef} />
                     </div>
                     <div className="p-3! border-t! flex! gap-2!">
