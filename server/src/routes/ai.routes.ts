@@ -1,5 +1,5 @@
 import express from 'express';
-import { aiService, IMessage } from '../services/ai.service.js';
+import { aiService, type IMessage } from '../services/ai.service.js';
 
 const router = express.Router();
 
