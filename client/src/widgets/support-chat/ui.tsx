@@ -7,12 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 
-// const { Text } = Typography;
+import { LikeOutlined, DislikeOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { message } from 'antd';
 
 interface IMessage {
     id: string;
     role: 'user' | 'ai';
     content: string;
+    feedback?: 'up' | 'down';
 }
 
 const QUICK_REPLIES = [
@@ -27,6 +29,24 @@ export const SupportChat = () => {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const handleFeedback = async (messageId: string, type: 'up' | 'down') => {
+        try {
+            setMessages(prev => prev.map(msg =>
+                msg.id === messageId ? { ...msg, feedback: type } : msg
+            ));
+
+            await fetch('http://localhost:5000/api/ai/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId, type }),
+            });
+
+            message.success('Спасибо за ваш отзыв!');
+        } catch (error) {
+            console.error('Feedback error:', error);
+        }
+    };
 
     // 6. Загрузка истории из LocalStorage
     useEffect(() => {
@@ -214,6 +234,24 @@ export const SupportChat = () => {
                                                     {msg.content}
                                                 </ReactMarkdown>
                                             </div>
+                                            {msg.role === 'ai' && msg.content && !isLoading && (
+                                                <div className="flex! justify-end! gap-1! mt-1! transition-opacity!">
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={msg.feedback === 'up' ? <CheckCircleOutlined className="text-green-500!" /> : <LikeOutlined className="text-gray-300! hover:text-blue-500!" />}
+                                                        onClick={() => handleFeedback(msg.id, 'up')}
+                                                        className="text-[10px]! p-0! h-6! w-6!"
+                                                    />
+                                                    <Button
+                                                        type="text"
+                                                        size="small"
+                                                        icon={msg.feedback === 'down' ? <CloseOutlined className="text-red-500!" /> : <DislikeOutlined className="text-gray-300! hover:text-red-500!" />}
+                                                        onClick={() => handleFeedback(msg.id, 'down')}
+                                                        className="text-[10px]! p-0! h-6! w-6!"
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

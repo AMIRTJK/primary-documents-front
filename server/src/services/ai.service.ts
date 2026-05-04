@@ -1,9 +1,11 @@
 import { Ollama } from 'ollama';
 import { AI_CONFIG } from '../config/ai.config.js';
+import { AI_TOOLS, type TToolName } from './tools.service.js';
 
 export interface IMessage {
-    role: 'user' | 'assistant' | 'system';
+    role: 'user' | 'assistant' | 'system' | 'tool';
     content: string;
+    tool_calls?: any[];
 }
 
 class AiService {
@@ -14,8 +16,37 @@ class AiService {
     }
 
     /**
-     * Генерация потокового ответа
-     * @param messages История сообщений
+     * Определения инструментов для модели
+     */
+    private getToolsDefinition() {
+        return [
+            {
+                type: 'function',
+                function: {
+                    name: 'get_project_stats',
+                    description: 'Получить общую статистику базы данных проекта (список таблиц и количество записей)',
+                    parameters: { type: 'object', properties: {} }
+                }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'get_table_schema',
+                    description: 'Получить структуру (колонки и типы данных) конкретной таблицы',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            tableName: { type: 'string', description: 'Имя таблицы' }
+                        },
+                        required: ['tableName']
+                    }
+                }
+            }
+        ];
+    }
+
+    /**
+     * Генерация потокового ответа с поддержкой инструментов
      */
     async chatStream(messages: IMessage[], currentPath?: string) {
         let systemContent = AI_CONFIG.PERSONA.systemPrompt;
@@ -24,21 +55,38 @@ class AiService {
             systemContent += `\n\nКОНТЕКСТ СТРАНИЦЫ: Пользователь сейчас находится на странице: ${currentPath}. Если это уместно, предложи помощь именно по этой странице.`;
         }
 
+        // Инструкция по инструментам (для моделей, которые не поддерживают нативно, но qwen2.5 поддерживает)
+        systemContent += `\n\nТЕХНИЧЕСКИЕ ВОЗМОЖНОСТИ: У тебя есть доступ к инструментам для проверки базы данных проекта. Если тебе нужна статистика или схема таблиц, используй соответствующие функции.`;
+
         const fullMessages: IMessage[] = [
             { role: 'system', content: systemContent },
             ...messages
         ];
 
         try {
-            return await this.ollama.chat({
+            const response = await this.ollama.chat({
                 model: AI_CONFIG.MODEL,
                 messages: fullMessages,
                 stream: true,
+                tools: this.getToolsDefinition() as any, // Используем инструменты
             });
+
+            return response;
         } catch (error) {
             console.error('Ollama Service Error:', error);
             throw error;
         }
+    }
+
+    /**
+     * Выполнение инструмента
+     */
+    async executeTool(name: string, args: any) {
+        const tool = AI_TOOLS[name as TToolName];
+        if (tool) {
+            return await tool(args);
+        }
+        return { error: `Инструмент ${name} не найден` };
     }
 }
 

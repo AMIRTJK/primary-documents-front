@@ -16,6 +16,17 @@ export const initDb = async () => {
 
   await db.exec("PRAGMA journal_mode = WAL;");
   await db.exec("PRAGMA synchronous = NORMAL;");
+
+  // Создаем таблицу отзывов, если её нет
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS ai_feedback (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      messageId TEXT NOT NULL,
+      type TEXT NOT NULL,
+      comment TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 export const getDb = () => {
