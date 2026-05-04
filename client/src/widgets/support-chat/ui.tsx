@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Card, Typography, Avatar, Space } from 'antd';
+import { useState, useRef, useEffect } from 'react';
+import { Button, Input, Card, Avatar, Space } from 'antd';
 import { MessageOutlined, CloseOutlined, SendOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import Link from 'next/link';
 
-const { Text } = Typography;
+// const { Text } = Typography;
 
 interface IMessage {
     id: string;
@@ -70,7 +70,7 @@ export const SupportChat = () => {
         setIsLoading(true);
 
         const aiMsgId = (Date.now() + 1).toString();
-        
+
         try {
             // 2. Передаем контекст страницы (pathname)
             const currentPath = window.location.pathname;
@@ -78,7 +78,7 @@ export const SupportChat = () => {
             const response = await fetch('http://localhost:5000/api/ai/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     currentPath,
                     messages: messages.concat(userMsg).map(m => ({
                         role: m.role === 'ai' ? 'assistant' : 'user',
@@ -128,7 +128,7 @@ export const SupportChat = () => {
         } catch (error) {
             console.error('Error fetching AI response:', error);
             setMessages((prev) => [
-                ...prev, 
+                ...prev,
                 { id: aiMsgId, role: 'ai', content: 'Ошибка при получении ответа. Проверьте соединение.' }
             ]);
         } finally {
@@ -180,9 +180,9 @@ export const SupportChat = () => {
                                         className={`flex! gap-2! ${msg.role === 'user' ? 'flex-row-reverse!' : 'flex-row!'}`}
                                     >
                                         {/* 5. Аватар */}
-                                        <Avatar 
-                                            size="small" 
-                                            icon={msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />} 
+                                        <Avatar
+                                            size="small"
+                                            icon={msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
                                             className={msg.role === 'user' ? 'bg-gray-400!' : 'bg-blue-500!'}
                                         />
                                         <div
@@ -198,8 +198,8 @@ export const SupportChat = () => {
                                                             const isInternal = props.href?.startsWith('/');
                                                             if (isInternal) {
                                                                 return (
-                                                                    <Link 
-                                                                        href={props.href!} 
+                                                                    <Link
+                                                                        href={props.href!}
                                                                         className="bg-blue-50! text-blue-600! px-2! py-1! rounded! border! border-blue-200! hover:bg-blue-100! transition-colors! inline-block! my-1! text-xs! font-bold!"
                                                                     >
                                                                         {props.children}
@@ -237,9 +237,9 @@ export const SupportChat = () => {
                             {/* 4. Быстрые ответы */}
                             <div className="px-3! pb-2! flex! flex-wrap! gap-2! bg-gray-50/50!">
                                 {QUICK_REPLIES.map((reply) => (
-                                    <Button 
-                                        key={reply} 
-                                        size="small" 
+                                    <Button
+                                        key={reply}
+                                        size="small"
                                         className="text-[11px]! rounded-full! border-gray-200! hover:border-blue-400! hover:text-blue-500!"
                                         onClick={() => handleSend(reply)}
                                         disabled={isLoading}
