@@ -28,6 +28,7 @@ export const SupportChat = () => {
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [thinkingStatus, setThinkingStatus] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const handleFeedback = async (messageId: string, type: 'up' | 'down') => {
@@ -100,6 +101,7 @@ export const SupportChat = () => {
         setMessages((prev) => [...prev, userMsg]);
         setInputValue('');
         setIsLoading(true);
+        setThinkingStatus(null);
 
         const aiMsgId = (Date.now() + 1).toString();
 
@@ -143,7 +145,11 @@ export const SupportChat = () => {
                             }
                             try {
                                 const parsed = JSON.parse(dataStr);
-                                if (parsed.content) {
+                                if (parsed.type === 'thinking') {
+                                    setThinkingStatus(parsed.content);
+                                } else if (parsed.type === 'action' && parsed.action === 'navigate') {
+                                    window.location.href = parsed.payload;
+                                } else if (parsed.content) {
                                     setMessages((prev) => prev.map(msg =>
                                         msg.id === aiMsgId
                                             ? { ...msg, content: msg.content + parsed.content }
@@ -165,6 +171,7 @@ export const SupportChat = () => {
             ]);
         } finally {
             setIsLoading(false);
+            setThinkingStatus(null);
         }
     };
 
@@ -281,23 +288,35 @@ export const SupportChat = () => {
                                     <div className="flex! gap-2!">
                                         <Avatar size="small" icon={<RobotOutlined />} className="bg-blue-500!" />
                                         <div className="bg-white! border! border-gray-100! p-3! rounded-2xl! rounded-tl-none! shadow-sm! w-[70%]!">
-                                            <div className="flex! flex-col! gap-2!">
-                                                <motion.div 
-                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
-                                                    transition={{ repeat: Infinity, duration: 1.5 }} 
-                                                    className="h-3! bg-gray-100! rounded! w-full!" 
-                                                />
-                                                <motion.div 
-                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
-                                                    transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} 
-                                                    className="h-3! bg-gray-100! rounded! w-[80%]!" 
-                                                />
-                                                <motion.div 
-                                                    animate={{ opacity: [0.4, 0.7, 0.4] }} 
-                                                    transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} 
-                                                    className="h-3! bg-gray-100! rounded! w-[60%]!" 
-                                                />
-                                            </div>
+                                            {thinkingStatus ? (
+                                                <div className="text-sm! text-blue-500! flex! items-center! gap-2! font-medium!">
+                                                    <motion.div
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                                    >
+                                                        <RobotOutlined />
+                                                    </motion.div>
+                                                    {thinkingStatus}
+                                                </div>
+                                            ) : (
+                                                <div className="flex! flex-col! gap-2!">
+                                                    <motion.div 
+                                                        animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                        transition={{ repeat: Infinity, duration: 1.5 }} 
+                                                        className="h-3! bg-gray-100! rounded! w-full!" 
+                                                    />
+                                                    <motion.div 
+                                                        animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                        transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} 
+                                                        className="h-3! bg-gray-100! rounded! w-[80%]!" 
+                                                    />
+                                                    <motion.div 
+                                                        animate={{ opacity: [0.4, 0.7, 0.4] }} 
+                                                        transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} 
+                                                        className="h-3! bg-gray-100! rounded! w-[60%]!" 
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}

@@ -63,6 +63,21 @@ class AiService {
                     description: 'Получить статистику лайков/дизлайков и последние комментарии пользователей о работе ИИ',
                     parameters: { type: 'object', properties: {} }
                 }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'navigate_user',
+                    description: 'Перенаправить пользователя на другую страницу сайта (роутинг)',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            path: { type: 'string', description: 'Путь для перенаправления (например, "/", "/auth", "/profile")' },
+                            reason: { type: 'string', description: 'Краткое объяснение причины перенаправления (для логов)' }
+                        },
+                        required: ['path', 'reason']
+                    }
+                }
             }
         ];
     }

@@ -113,6 +113,18 @@ export const AI_TOOLS = {
             console.error('Tool Error (get_ai_feedback_stats):', error);
             return { error: "Не удалось получить статистику фидбека" };
         }
+    },
+
+    /**
+     * Навигация пользователя
+     */
+    navigate_user: async ({ path, reason }: { path: string, reason: string }) => {
+        // Возвращаем специальный маркер, который перехватит ai.routes.ts
+        return { 
+            _internal_action: 'navigate',
+            url: path,
+            message: `Перенаправляю пользователя на ${path} (Причина: ${reason})`
+        };
     }
 };
 

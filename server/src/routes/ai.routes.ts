@@ -57,14 +57,27 @@ router.post('/generate', async (req, res) => {
             const updatedMessages = [...chatMessages, { role: 'assistant', content: fullContent, tool_calls: toolCalls }];
             
             for (const toolCall of toolCalls) {
+                // Отправляем статус "думаю" на фронтенд
+                res.write(`data: ${JSON.stringify({ type: 'thinking', content: `Использую инструмент: ${toolCall.function.name}...` })}\n\n`);
+
                 const result = await aiService.executeTool(toolCall.function.name, toolCall.function.arguments);
+                
+                // Если инструмент запросил навигацию (активное действие)
+                if (result && result._internal_action === 'navigate') {
+                    res.write(`data: ${JSON.stringify({ type: 'action', action: 'navigate', payload: result.url })}\n\n`);
+                }
+
                 updatedMessages.push({
                     role: 'tool',
                     content: JSON.stringify(result)
                 });
             }
 
+            // Отправляем статус завершения раздумий
+            res.write(`data: ${JSON.stringify({ type: 'thinking', content: null })}\n\n`);
+
             // Запускаем новый поток с результатами
+
             const finalStream = await aiService.chatStream(updatedMessages, currentPath);
             for await (const finalPart of finalStream) {
                 if (finalPart.message.content) {
