@@ -55,6 +55,14 @@ class AiService {
                         required: ['filePath']
                     }
                 }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'get_ai_feedback_stats',
+                    description: 'Получить статистику лайков/дизлайков и последние комментарии пользователей о работе ИИ',
+                    parameters: { type: 'object', properties: {} }
+                }
             }
         ];
     }
@@ -62,14 +70,14 @@ class AiService {
     /**
      * Генерация потокового ответа с поддержкой инструментов
      */
-    async chatStream(messages: IMessage[], currentPath?: string) {
+    async *chatStream(messages: IMessage[], currentPath?: string) {
         let systemContent = AI_CONFIG.PERSONA.systemPrompt;
         
         if (currentPath) {
             systemContent += `\n\nКОНТЕКСТ СТРАНИЦЫ: Пользователь сейчас находится на странице: ${currentPath}. Если это уместно, предложи помощь именно по этой странице.`;
         }
 
-        // Инструкция по инструментам (для моделей, которые не поддерживают нативно, но qwen2.5 поддерживает)
+        // Инструкция по инструментам
         systemContent += `\n\nТЕХНИЧЕСКИЕ ВОЗМОЖНОСТИ: У тебя есть доступ к инструментам для проверки базы данных проекта. Если тебе нужна статистика или схема таблиц, используй соответствующие функции.`;
 
         const fullMessages: IMessage[] = [
@@ -81,11 +89,11 @@ class AiService {
             const response = await this.ollama.chat({
                 model: AI_CONFIG.MODEL,
                 messages: fullMessages,
-                stream: true,
-                tools: this.getToolsDefinition() as any, // Используем инструменты
+                stream: false, // Отключаем стриминг для стабильности инструментов
+                tools: this.getToolsDefinition() as any,
             });
 
-            return response;
+            yield response;
         } catch (error) {
             console.error('Ollama Service Error:', error);
             throw error;

@@ -24,38 +24,52 @@ router.post('/generate', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     try {
-        let stream = await aiService.chatStream(chatMessages, currentPath);
+        const stream = await aiService.chatStream(chatMessages, currentPath);
 
-        // Обработка tool_calls (упрощенная для стриминга)
-        let toolCallDetected = false;
+        let fullContent = '';
+        let toolCalls: any[] = [];
+        let isFirstChunk = true;
 
         for await (const part of stream) {
+            // Если есть вызов инструмента, сохраняем его и ПРЕРЫВАЕМ стрим текста
             if (part.message.tool_calls && part.message.tool_calls.length > 0) {
-                toolCallDetected = true;
-                
-                // Выполняем инструменты
-                const updatedMessages = [...chatMessages, part.message];
-                
-                for (const toolCall of part.message.tool_calls) {
-                    const result = await aiService.executeTool(toolCall.function.name, toolCall.function.arguments);
-                    updatedMessages.push({
-                        role: 'tool',
-                        content: JSON.stringify(result)
-                    });
-                }
-
-                // Запускаем новый поток с результатами инструментов
-                const finalStream = await aiService.chatStream(updatedMessages, currentPath);
-                for await (const finalPart of finalStream) {
-                    if (finalPart.message.content) {
-                        res.write(`data: ${JSON.stringify({ content: finalPart.message.content })}\n\n`);
-                    }
-                }
-                break; // Выходим из первого цикла
+                toolCalls = part.message.tool_calls;
+                break;
             }
 
             if (part.message.content) {
-                res.write(`data: ${JSON.stringify({ content: part.message.content })}\n\n`);
+                // Если это первый чанк и он похож на начало JSON, притормозим (некоторые модели так тупят)
+                const content = part.message.content;
+                if (isFirstChunk && content.trim().startsWith('{')) {
+                    fullContent += content;
+                    isFirstChunk = false;
+                    continue; 
+                }
+
+                fullContent += content;
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                isFirstChunk = false;
+            }
+        }
+
+        // Если были вызовы инструментов
+        if (toolCalls.length > 0) {
+            const updatedMessages = [...chatMessages, { role: 'assistant', content: fullContent, tool_calls: toolCalls }];
+            
+            for (const toolCall of toolCalls) {
+                const result = await aiService.executeTool(toolCall.function.name, toolCall.function.arguments);
+                updatedMessages.push({
+                    role: 'tool',
+                    content: JSON.stringify(result)
+                });
+            }
+
+            // Запускаем новый поток с результатами
+            const finalStream = await aiService.chatStream(updatedMessages, currentPath);
+            for await (const finalPart of finalStream) {
+                if (finalPart.message.content) {
+                    res.write(`data: ${JSON.stringify({ content: finalPart.message.content })}\n\n`);
+                }
             }
         }
 

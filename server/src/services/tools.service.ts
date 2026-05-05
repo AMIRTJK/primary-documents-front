@@ -74,6 +74,45 @@ export const AI_TOOLS = {
         } catch (error) {
             return { error: `Не удалось прочитать файл: ${filePath}` };
         }
+    },
+
+    /**
+     * Получить статистику фидбека по ИИ
+     */
+    get_ai_feedback_stats: async () => {
+        const db = getDb();
+        try {
+            const stats = await db.all(`
+                SELECT 
+                    type, 
+                    COUNT(*) as count 
+                FROM ai_feedback 
+                GROUP BY type
+            `);
+            
+            const lastComments = await db.all(`
+                SELECT comment, createdAt 
+                FROM ai_feedback 
+                WHERE comment IS NOT NULL 
+                ORDER BY createdAt DESC 
+                LIMIT 5
+            `);
+
+            const total = stats.reduce((acc, curr) => acc + curr.count, 0);
+            const likes = stats.find(s => s.type === 'up')?.count || 0;
+            const dislikes = stats.find(s => s.type === 'down')?.count || 0;
+
+            return {
+                total,
+                likes,
+                dislikes,
+                approvalRate: total > 0 ? ((likes / total) * 100).toFixed(1) + '%' : '0%',
+                recentComments: lastComments
+            };
+        } catch (error) {
+            console.error('Tool Error (get_ai_feedback_stats):', error);
+            return { error: "Не удалось получить статистику фидбека" };
+        }
     }
 };
 
