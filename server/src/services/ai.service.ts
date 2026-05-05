@@ -41,6 +41,20 @@ class AiService {
                         required: ['tableName']
                     }
                 }
+            },
+            {
+                type: 'function',
+                function: {
+                    name: 'read_project_file',
+                    description: 'Прочитать содержимое файла проекта для анализа кода или структуры',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            filePath: { type: 'string', description: 'Путь к файлу относительно корня проекта (напр. server/src/index.ts)' }
+                        },
+                        required: ['filePath']
+                    }
+                }
             }
         ];
     }
